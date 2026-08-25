@@ -1,6 +1,15 @@
 # WIP
 
 
+Syntax check
+```bash
+g++ -fsyntax-only -std=c++17 -Wall -Wextra main.cpp
+```
+
+Creating executable
+```bash
+g++ -fsyntax-only -std=c++17 -Wall -Wextra main.cpp
+```
 
 
 ## Tello Official Docs

@@ -1,15 +1,9 @@
 #include <iostream>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <cstring>
-#include <cerrno>
-#include <list>
 #include <string>
-#include <unordered_map>
-#include <sstream>
 #include <vector>
-
+#include <sstream>
+#include <unordered_map>
+#include "comms/UdpClientSocket.h"
 
 void commandMenu();
 void definingRoute(std::vector<std::string>& commandsList);
@@ -22,99 +16,35 @@ void startRoute(std::vector<std::string>& commandsList);
 
 int main() {
 
+    // INITIALIZING SEND COMMAND & RECEIVE RESPONSE
+    UdpClient droneClient;
 
-    //! CREATING SOCKET, INITIAL COMMUNICATION
-    //________________________________________
-    // https://www.linuxhowtos.org/manpages/2/socket.html
-    int TextCommsClientSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    int commsSocket = droneClient.initialSocket();
 
-    if (TextCommsClientSocket < 0) {
-        std::cerr << "Error creating TextCommsClientSocket" << std::endl;
-        return 1;
+    if (commsSocket == -1) {
+        return -1;
     }
+    // ____________________________________________
 
-    
-    std::cout << "UDP client set up successfully \n" << std::endl;
-
-    // https://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/
-
-    // server side socket
-
-    // address
-    sockaddr_in serverAddress;
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(8889); // port number
-    serverAddress.sin_addr.s_addr = inet_addr("192.168.10.1"); // SEND COMMAND & RECEIVE RESPONSE FROM DRONE
-
-
-    // connecting to the server/drone for the first time
-    connect(TextCommsClientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
-
-    std::cout << "Attempting to connect to the Tello drone...\nTimeout: 5 secs" << std::endl;
-   
-
-    const char* initialMessage = "command"; // initial command to enter SDK mode 
-
-    send(TextCommsClientSocket, initialMessage, strlen(initialMessage), 0);
-
-   
-    // timer to wait for response
-    struct timeval responseTimeout;
-    responseTimeout.tv_sec = 5;
-    responseTimeout.tv_usec = 0;
-
-    // setting timout
-    setsockopt(TextCommsClientSocket, SOL_SOCKET, SO_RCVTIMEO, &responseTimeout, sizeof(responseTimeout));
-
-
-    // waiting for the drone response
-    char bufferResponse[1024];
-    ssize_t response = recv(TextCommsClientSocket, bufferResponse, sizeof(bufferResponse) - 1, 0);
-
-
-    // TIMER 
-    if (response < 0) {
-        if (errno == EAGAIN || errno == EWOULDBLOCK) {
-            std::cerr << "Timeout. Drone didn't respond within 5 secs. \n";
-        } else {
-            std::cout << "Failed to send initial command \n Aborting." << std::endl;
-            std::cerr << "Socket read error: " << strerror(errno) << " (code: " << errno << ")" << std::endl;
-        }
-
-        close(TextCommsClientSocket);
-        return 1;
-    }
-  
-    std::cout << "Received drone response. \n" << std::endl;
-
-    if (response > 0) {
-        bufferResponse[response] = '\0'; // setting bit count to null char / stopping reading where received packet data ends
-        std::cout << "Tello Drone:" << bufferResponse << std::endl;
-    
-    
-        std::cout << "Sent initial command successfully \n Tello SDK mode initiated" << std::endl;
-    } 
-
-    //________________________________________
+    // DEFINING ROUTE AND STARTING IT
 
     std::vector<std::string> commandsList; 
    
-    // DEFINING ROUTE AND STARTING IT
     definingRoute(commandsList);
-    startRoute(commandsList);
+    startRoute(commandsList); 
+    // ____________________________________________
 
-    // ________________________________________
+    // TBA...
 
-    // LATER: VIDEO STREAM
-    // SCANNING + ENVIAR ALERTS
+    // ____________________________________________
 
-    // ________________________________________
-    close(TextCommsClientSocket);
+    // CLOSING CONNECTIONS
+    droneClient.closeCommsConnection();
 
 }
 
 
-// Lookup table for inverted commands
+// Lookup table for inverted commands for return path
 const std::unordered_map<std::string, std::string> opposites = {
     {"up", "down"},
     {"down", "up"},
@@ -125,7 +55,6 @@ const std::unordered_map<std::string, std::string> opposites = {
     {"cw", "ccw"},
     {"ccw", "cw"}
 };
-
 
 void commandMenu() {
     std::cout << "_____________________ TELLO COMMANDS _____________________";
@@ -140,7 +69,6 @@ void commandMenu() {
     std::cout << "  0         | Stop and execute\n";
     std::cout << "____________________________________________________________";
 }
-
 
 void definingRoute(std::vector<std::string>& commandsList) {
     bool continueInput = true;
@@ -193,10 +121,10 @@ void definingRoute(std::vector<std::string>& commandsList) {
 
 }
 
-// SHOULD RECEIVE DRONE CURRENT STATE
 void startRoute(std::vector<std::string>& commandsList) {
 
     // communicate with the drone for path....
+    // USES SEND COMMAND!!
 
     // TESTING
     for (int i = 0; i < commandsList.size(); i++){
