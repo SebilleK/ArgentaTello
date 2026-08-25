@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <cstring>
+#include <cerrno>
 
 
 
@@ -40,15 +41,42 @@ int main() {
     // connecting to the server/drone for the first time
     connect(TextCommsClientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
 
-    std::cout << "Connected to the Tello drone successfully \n" << std::endl;
+    std::cout << "Attempting to connect to the Tello drone...\nTimeout: 5 secs" << std::endl;
+   
 
     const char* initialMessage = "command"; // initial command to enter SDK mode 
 
     send(TextCommsClientSocket, initialMessage, strlen(initialMessage), 0);
 
+   
+    // timer to wait for response
+    struct timeval responseTimeout;
+    responseTimeout.tv_sec = 5;
+    responseTimeout.tv_usec = 0;
+
+    // setting timout
+    setsockopt(TextCommsClientSocket, SOL_SOCKET, SO_RCVTIMEO, &responseTimeout, sizeof(responseTimeout));
+
+
     // waiting for the drone response
     char bufferResponse[1024];
     ssize_t response = recv(TextCommsClientSocket, bufferResponse, sizeof(bufferResponse) - 1, 0);
+
+
+    // TIMER 
+    if (response < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            std::cerr << "Timeout. Drone didn't respond within 5 secs. \n";
+        } else {
+            std::cout << "Failed to send initial command \n Aborting." << std::endl;
+            std::cerr << "Socket read error: " << strerror(errno) << " (code: " << errno << ")" << std::endl;
+        }
+
+        close(TextCommsClientSocket);
+        return 1;
+    }
+  
+    std::cout << "Received drone response. \n" << std::endl;
 
     if (response > 0) {
         bufferResponse[response] = '\0'; // setting bit count to null char / stopping reading where received packet data ends
@@ -56,10 +84,8 @@ int main() {
     
     
         std::cout << "Sent initial command successfully \n Tello SDK mode initiated" << std::endl;
-    } else { // -1 
-        std::cout << "Failed to send initial command \n Aborting." << std::endl;
-        close(TextCommsClientSocket);
-    }
+    } 
+
 
     // TBA 
     /// COMANDOS ....
@@ -68,7 +94,7 @@ int main() {
     // scanning as it goes
     // return and land
 
-    
+
     close(TextCommsClientSocket);
 
 
