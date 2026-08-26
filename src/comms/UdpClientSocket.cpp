@@ -91,7 +91,46 @@ int UdpClient::initialSocket(){
 
 }
         
-void UdpClient::sendCommand(std::vector<std::string>& command){
+int UdpClient::sendCommand(const std::string& command){
+
+    send(currentSocket, command.data(), command.size(), 0); // .data() => raw pointer
+     
+    // timer to wait for response
+    struct timeval responseTimeout;
+    responseTimeout.tv_sec = 5;
+    responseTimeout.tv_usec = 0;
+
+    // setting timout
+    setsockopt(currentSocket, SOL_SOCKET, SO_RCVTIMEO, &responseTimeout, sizeof(responseTimeout));
+
+
+    // waiting for the drone response
+    char bufferResponse[1024];
+    ssize_t response = recv(currentSocket, bufferResponse, sizeof(bufferResponse) - 1, 0);
+
+
+    // TIMER 
+    if (response <= 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            std::cerr << "Timeout. Drone didn't respond within 5 secs. \n";
+        } else {
+            std::cout << "Failed to send command \n Aborting." << std::endl;
+            std::cerr << "Socket read error: " << strerror(errno) << " (code: " << errno << ")" << std::endl;
+        }
+        close(currentSocket);
+        return -1;
+    }
+    
+
+    if (response > 0) {
+        bufferResponse[response] = '\0'; // setting bit count to null char / stopping reading where received packet data ends
+        std::cout << "Tello Drone:" << bufferResponse << std::endl;
+    
+    
+        std::cout << "Sent command successfully" << std::endl;
+        return currentSocket;
+    } 
+
 }
 
 void UdpClient::closeCommsConnection() { 

@@ -3,11 +3,13 @@
 #include <vector>
 #include <sstream>
 #include <unordered_map>
+#include <thread>
+#include <chrono>
 #include "comms/UdpClientSocket.h"
 
 void commandMenu();
 void definingRoute(std::vector<std::string>& commandsList);
-void startRoute(std::vector<std::string>& commandsList);
+void startRoute(std::vector<std::string>& commandsList, UdpClient droneClient);
 
 // communication with the drone 
 // opening network channel w a socket
@@ -31,7 +33,7 @@ int main() {
     std::vector<std::string> commandsList; 
    
     definingRoute(commandsList);
-    startRoute(commandsList); 
+    startRoute(commandsList, droneClient); 
     // ____________________________________________
 
     // TBA...
@@ -121,15 +123,13 @@ void definingRoute(std::vector<std::string>& commandsList) {
 
 }
 
-void startRoute(std::vector<std::string>& commandsList) {
+void startRoute(std::vector<std::string>& commandsList, UdpClient droneClient) {
 
-    // communicate with the drone for path....
-    // USES SEND COMMAND!!
-
-    // TESTING
+    
     for (int i = 0; i < commandsList.size(); i++){
-
-        std::cout << commandsList[i] << "\n";
+        
+        droneClient.sendCommand(commandsList[i]);
+        std::this_thread::sleep_for(std::chrono::seconds(1));  // added delay for the drone to process commands
     }
 
 }

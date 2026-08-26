@@ -13,6 +13,6 @@ class UdpClient {
         ~UdpClient();
 
         int initialSocket();
-        void sendCommand(std::vector<std::string>& command);
+        int sendCommand(const std::string& command);
         void closeCommsConnection();
 };
