@@ -38,7 +38,7 @@ int UdpClient::initialSocket(){
     sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(8889); // port number
-    serverAddress.sin_addr.s_addr = inet_addr("192.168.10.1"); // SEND COMMAND & RECEIVE RESPONSE FROM DRONE
+    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); // inet_addr("192.168.10.1"); // SEND COMMAND & RECEIVE RESPONSE FROM DRONE
 
 
     // connecting to the server/drone for the first time
@@ -85,7 +85,7 @@ int UdpClient::initialSocket(){
         std::cout << "Tello Drone:" << bufferResponse << std::endl;
     
     
-        std::cout << "Sent initial command successfully \n Tello SDK mode initiated" << std::endl;
+        std::cout << "Sent initial command successfully \nTello SDK mode initiated" << std::endl;
         return currentSocket;
     } 
 

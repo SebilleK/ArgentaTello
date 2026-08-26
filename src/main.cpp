@@ -57,7 +57,7 @@ const std::unordered_map<std::string, std::string> opposites = {
 };
 
 void commandMenu() {
-    std::cout << "_____________________ TELLO COMMANDS _____________________";
+    std::cout << "_____________________ TELLO COMMANDS _____________________\n";
     std::cout << "  up x      | Ascend to \"x\" cm (x = 20-500)\n";
     std::cout << "  down x    | Descend to \"x\" cm (x = 20-500)\n";
     std::cout << "  left x    | Fly left for \"x\" cm (x = 20-500)\n";
@@ -67,7 +67,7 @@ void commandMenu() {
     std::cout << "  cw x      | Rotate \"x\" degrees clockwise (x = 1-360)\n";
     std::cout << "  ccw x     | Rotate \"x\" degrees counter-clockwise (x = 1-360)\n";
     std::cout << "  0         | Stop and execute\n";
-    std::cout << "____________________________________________________________";
+    std::cout << "____________________________________________________________\n";
 }
 
 void definingRoute(std::vector<std::string>& commandsList) {

@@ -1,16 +1,45 @@
 # WIP
 
 
+## Makefile
+
+Make sure you're in the root directory.
+
+**Build and run**
+```bash
+make
+./argenta
+```
+
+**Remove**
+```bash
+make clean
+```
+
+### Manual
+
 Syntax check
 ```bash
-g++ -fsyntax-only -std=c++17 -Wall -Wextra main.cpp
+g++ -fsyntax-only -std=c++17 -Wall -Wextra -Isrc [filename_path]
 ```
+**ex: src/main.cpp or src/comms/UdpClientSocket.cpp**
 
 Creating executable
 ```bash
-g++ -fsyntax-only -std=c++17 -Wall -Wextra main.cpp
+g++ -std=c++17 -Wall -Wextra src/main.cpp src/comms/UdpClientSocket.cpp -Isrc -o argenta
 ```
+**use all files**
 
+
+## Mock Server
+
+Local mock server for testing command logic without the drone. **Change client address to 127.0.0.1**.
+
+Creating executable and running
+```bash
+g++ TestServer.cpp -o server
+./server
+```
 
 ## Tello Official Docs
 
