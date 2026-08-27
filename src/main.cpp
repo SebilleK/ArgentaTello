@@ -5,11 +5,16 @@
 #include <unordered_map>
 #include <thread>
 #include <chrono>
+#include <thread>
+#include <atomic>
+
 #include "comms/UdpClientSocket.h"
+#include "comms/UdpServerSocket.h"
 
 void commandMenu();
 void definingRoute(std::vector<std::string>& commandsList);
 void startRoute(const std::vector<std::string>& commandsList, UdpClient& droneClient);
+void droneStatusCheck(UdpServer& serverSocket, std::atomic<bool>& keepRunning);
 
 // communication with the drone 
 // opening network channel w a socket
@@ -18,7 +23,7 @@ void startRoute(const std::vector<std::string>& commandsList, UdpClient& droneCl
 
 int main() {
 
-    // INITIALIZING SEND COMMAND & RECEIVE RESPONSE
+    // INITIALIZING SEND COMMAND & RECEIVE RESPONSE PORT 8889
     UdpClient droneClient;
 
     int commsSocket = droneClient.initialSocket();
@@ -26,6 +31,22 @@ int main() {
     if (commsSocket == -1) {
         return -1;
     }
+
+    // ____________________________________________
+
+    // INITIALIZING RECEIVE TELLO STATE PORT 8890
+    UdpServer receivingServer;
+
+    int serverSocket = receivingServer.initialSocket();
+
+    if (serverSocket == -1) {
+        return -1;
+    }
+
+    // BACKGROUND THREAD FOR STATUS MONITORING
+    std::atomic<bool> isRunning(true);
+    std::thread workerThread(droneStatusCheck, std::ref(receivingServer), std::ref(isRunning)); // std::ref(serverSocket)
+
     // ____________________________________________
 
     // DEFINING ROUTE AND STARTING IT
@@ -46,6 +67,11 @@ int main() {
     // CLOSING CONNECTIONS
     // droneClient.closeCommsConnection(); // NOT NEEDED DESTRUCTOR DOES IT 
 
+    // closing the background thread for status monitoring
+    isRunning = false;
+    workerThread.join();
+
+    return 0;
 }
 
 
@@ -135,4 +161,13 @@ void startRoute(const std::vector<std::string>& commandsList, UdpClient& droneCl
     }
 
     droneClient.sendCommand("land");
+}
+
+void droneStatusCheck(UdpServer& serverSocket, std::atomic<bool>& keepRunning){
+    while (keepRunning) {
+        std::string message = serverSocket.listeningToStatus();
+
+        std::cout << message << std::endl;
+
+    }
 }

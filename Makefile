@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -Isrc
 TARGET = argenta
-SRCS = src/main.cpp src/comms/UdpClientSocket.cpp 
+SRCS = src/main.cpp src/comms/UdpClientSocket.cpp src/comms/UdpServerSocket.cpp
 
 all: $(TARGET)
 
