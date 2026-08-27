@@ -14,5 +14,6 @@ class UdpClient {
 
         int initialSocket();
         int sendCommand(const std::string& command);
+        int receiveCommandResponse();
         void closeCommsConnection();
 };

@@ -9,7 +9,7 @@
 
 void commandMenu();
 void definingRoute(std::vector<std::string>& commandsList);
-void startRoute(std::vector<std::string>& commandsList, UdpClient droneClient);
+void startRoute(const std::vector<std::string>& commandsList, UdpClient& droneClient);
 
 // communication with the drone 
 // opening network channel w a socket
@@ -32,7 +32,10 @@ int main() {
 
     std::vector<std::string> commandsList; 
    
-    definingRoute(commandsList);
+    while(commandsList.size() == 0) {
+        definingRoute(commandsList);
+    }
+
     startRoute(commandsList, droneClient); 
     // ____________________________________________
 
@@ -41,7 +44,7 @@ int main() {
     // ____________________________________________
 
     // CLOSING CONNECTIONS
-    droneClient.closeCommsConnection();
+    // droneClient.closeCommsConnection(); // NOT NEEDED DESTRUCTOR DOES IT 
 
 }
 
@@ -87,7 +90,7 @@ void definingRoute(std::vector<std::string>& commandsList) {
 
 
         // stopping adding commands and defining return path w/inverse commands
-        if (currentCommand == "0") {
+        if (currentCommand == "0" && !commandsList.empty()) {
             continueInput = false; 
 
             size_t originalSize = commandsList.size();
@@ -110,21 +113,20 @@ void definingRoute(std::vector<std::string>& commandsList) {
                 } else {
                     std::cerr << "It was not possible to define a return route.\n Please try to input a path again." << std::endl;
                     commandsList.clear();
-                    definingRoute(commandsList);
                     return;
                 }   
             }
             
             // adding a command 
-        } else if (!currentCommand.empty()) {
+        } else if (!currentCommand.empty() && currentCommand != "0") {
             commandsList.push_back(currentCommand);
         }
     }
 
 }
 
-void startRoute(std::vector<std::string>& commandsList, UdpClient droneClient) {
-
+void startRoute(const std::vector<std::string>& commandsList, UdpClient& droneClient) {
+    droneClient.sendCommand("takeoff");
     
     for (int i = 0; i < commandsList.size(); i++){
         
@@ -132,4 +134,5 @@ void startRoute(std::vector<std::string>& commandsList, UdpClient droneClient) {
         std::this_thread::sleep_for(std::chrono::seconds(1));  // added delay for the drone to process commands
     }
 
+    droneClient.sendCommand("land");
 }
