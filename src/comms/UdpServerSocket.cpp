@@ -48,7 +48,7 @@ int UdpServer::initialSocket(){
 }
 
 std::string UdpServer::listeningToStatus(){
-    std::cout << "UDP Server listening on port 8890...\n" << std::endl;
+    // std::cout << "UDP Server listening on port 8890...\n" << std::endl;
 
     sockaddr_in client_addr{};
     socklen_t client_len = sizeof(client_addr);
@@ -72,7 +72,8 @@ std::string UdpServer::listeningToStatus(){
     }
 
     buffer[bytes_received] = '\0';
-    // std::cout << "Received status: " << buffer << std::endl;
+    // PRINTING
+    // std::cout << "Received status: " << buffer << std::endl; 
     return buffer;
 }
 

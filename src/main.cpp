@@ -7,6 +7,7 @@
 #include <chrono>
 #include <thread>
 #include <atomic>
+#include <fstream>
 
 #include "comms/UdpClientSocket.h"
 #include "comms/UdpServerSocket.h"
@@ -164,10 +165,23 @@ void startRoute(const std::vector<std::string>& commandsList, UdpClient& droneCl
 }
 
 void droneStatusCheck(UdpServer& serverSocket, std::atomic<bool>& keepRunning){
+    std::ofstream logFile("drone_status_log.txt", std::ios::app);
+
+    if (!logFile.is_open()) {
+        std::cerr << "Failed to open log file." << std::endl;
+        return;
+    }
+
     while (keepRunning) {
         std::string message = serverSocket.listeningToStatus();
 
-        std::cout << message << std::endl;
 
+        // PRINT
+        // std::cout << message << std::endl;
+
+        // WRITE TO FILE
+        logFile << message << std::endl;
     }
+
+    logFile.close();
 }

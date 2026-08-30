@@ -6,8 +6,29 @@
 #include <unistd.h>
 #include <cstring>
 #include <cerrno>
+#include <thread>
+#include <chrono>
+
+int sendAndReceive();
+int droneStatus();
 
 int main() {
+    // BG THREAD FOR DRONE STATUS
+    std::thread statusThread(droneStatus); 
+    std::cout << "UDP Mock Client sending info on port 8890... \n" << std::endl;
+
+    // SEND & RECEIVE COMMANDS
+    sendAndReceive();
+
+    // JOIN
+    if (statusThread.joinable()) {
+        statusThread.join();
+    }
+
+    return 0;
+}
+
+int sendAndReceive() {
     // UDP SOCKET
     int server_fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (server_fd == -1) {
@@ -75,5 +96,34 @@ int main() {
     }
 
     close(server_fd);
+    return 0;
+}
+
+int droneStatus() {
+    int client = socket(AF_INET, SOCK_DGRAM, 0);
+        
+    if (client < 0) {
+        std::cerr << "Error creating client" << std::endl;
+        return -1;
+    }
+
+    sockaddr_in serverAddress;
+    serverAddress.sin_family = AF_INET;
+    serverAddress.sin_port = htons(8890); // port number
+    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); // inet_addr("192.168.10.1"); 
+
+    connect(client, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
+
+    
+    const char* initialMessage = "Data string received.... x y z blah blah"; 
+
+    while (true) {
+        send(client, initialMessage, strlen(initialMessage), 0);
+        
+        // 1 sec
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+
+    close(client);
     return 0;
 }

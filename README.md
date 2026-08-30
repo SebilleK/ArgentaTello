@@ -31,9 +31,11 @@ g++ -std=c++17 -Wall -Wextra src/main.cpp src/comms/UdpClientSocket.cpp -Isrc -o
 **use all files**
 
 
-## Mock Server
+## Mock Server/Client
 
-Local mock server for testing command logic without the drone. **Change client address to 127.0.0.1**.
+Local mock server for testing command logic without the drone (PORT 8889). 
+Also sends fake status updates and writes them continously to a drone_status_log.txt file (PORT 8890).
+**Change client address to 127.0.0.1**.
 
 Creating executable and running
 ```bash
