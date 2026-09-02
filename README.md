@@ -50,3 +50,21 @@ https://dl-cdn.ryzerobotics.com/downloads/Tello/Tello%20SDK%202.0%20User%20Guide
 
 **USER GUIDE:**
 https://dl-cdn.ryzerobotics.com/downloads/Tello/20180212/Tello+User+Manual+v1.0_EN_2.12.pdf
+
+## Connecting to the drone
+
+0. Download this repository
+1. Turn the drone on, wait a few seconds, and ensure you're connected the correct Wifi Network (Tello-XXXXXX)
+2. Change the necessary IPs (local => drone)
+
+Ex: UdpClientSocket.cpp
+```bash 
+serverAddress.sin_addr.s_addr = inet_addr("192.168.10.1"); // inet_addr("127.0.0.1"); // SEND COMMAND & RECEIVE RESPONSE FROM DRONE
+```
+3. Allow UDP traffic on ports 8889 and 11111 in your device
+
+4. Compile and run the program
+```bash 
+make
+./argenta
+```
