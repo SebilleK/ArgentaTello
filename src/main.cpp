@@ -11,11 +11,13 @@
 
 #include "comms/UdpClientSocket.h"
 #include "comms/UdpServerSocket.h"
+#include "stream/StreamReceiver.h"
 
 void commandMenu();
 void definingRoute(std::vector<std::string>& commandsList);
 void startRoute(const std::vector<std::string>& commandsList, UdpClient& droneClient);
 void droneStatusCheck(UdpServer& serverSocket, std::atomic<bool>& keepRunning);
+void droneVideoStream(UdpClient& droneClient, std::atomic<bool>& keepRunning);
 
 // communication with the drone 
 // opening network channel w a socket
@@ -44,10 +46,6 @@ int main() {
         return -1;
     }
 
-    // BACKGROUND THREAD FOR STATUS MONITORING
-    std::atomic<bool> isRunning(true);
-    std::thread workerThread(droneStatusCheck, std::ref(receivingServer), std::ref(isRunning)); // std::ref(serverSocket)
-
     // ____________________________________________
 
     // DEFINING ROUTE AND STARTING IT
@@ -58,23 +56,32 @@ int main() {
         definingRoute(commandsList);
     }
 
+    // ____________________________________________
+
+    // BACKGROUND THREAD FOR STATUS MONITORING
+    std::atomic<bool> isRunning(true);
+    std::thread statusThread(droneStatusCheck, std::ref(receivingServer), std::ref(isRunning)); // std::ref(serverSocket)
+
+    // BACKGROUND THREAD FOR VIDEO
+    std::atomic<bool> isRunningStream(true);
+    std::thread streamThread(droneVideoStream, std::ref(droneClient), std::ref(isRunningStream));
+
+    // ____________________________________________
+
     startRoute(commandsList, droneClient); 
-    // ____________________________________________
-
-    // TBA...
-
-    // ____________________________________________
 
     // CLOSING CONNECTIONS
     // droneClient.closeCommsConnection(); // NOT NEEDED DESTRUCTOR DOES IT 
 
-    // closing the background thread for status monitoring
+    // closing the background threads
     isRunning = false;
-    workerThread.join();
+    isRunningStream = false;
+
+    statusThread.join();
+    streamThread.join();
 
     return 0;
 }
-
 
 // Lookup table for inverted commands for return path
 const std::unordered_map<std::string, std::string> opposites = {
@@ -184,4 +191,18 @@ void droneStatusCheck(UdpServer& serverSocket, std::atomic<bool>& keepRunning){
     }
 
     logFile.close();
+}
+
+void droneVideoStream(UdpClient& droneClient, std::atomic<bool>& keepRunning){
+    droneClient.sendCommand("streamon");
+    // waiting for initialization above
+    // std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    // running video loop
+    UdpStream videoReceiver;
+
+    videoReceiver.listeningToStream(keepRunning);
+
+    // close
+    droneClient.sendCommand("streamoff");
 }
