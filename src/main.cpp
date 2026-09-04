@@ -62,20 +62,27 @@ int main() {
     std::atomic<bool> isRunning(true);
     std::thread statusThread(droneStatusCheck, std::ref(receivingServer), std::ref(isRunning)); // std::ref(serverSocket)
 
+    // ____________________________________________
+
     // BACKGROUND THREAD FOR VIDEO
     std::atomic<bool> isRunningStream(true);
     std::thread streamThread(droneVideoStream, std::ref(droneClient), std::ref(isRunningStream));
 
     // ____________________________________________
 
+    droneClient.sendCommand("streamon"); // sequentially stream on / off to eliminate race conditions
+
+    // _____________________________________________
+
     startRoute(commandsList, droneClient); 
 
-    // CLOSING CONNECTIONS
-    // droneClient.closeCommsConnection(); // NOT NEEDED DESTRUCTOR DOES IT 
+    // _____________________________________________
 
     // closing the background threads
     isRunning = false;
     isRunningStream = false;
+
+    droneClient.sendCommand("streamoff");
 
     statusThread.join();
     streamThread.join();
@@ -164,10 +171,12 @@ void startRoute(const std::vector<std::string>& commandsList, UdpClient& droneCl
     
     for (int i = 0; i < commandsList.size(); i++){
         
-        droneClient.sendCommand(commandsList[i]);
-        std::this_thread::sleep_for(std::chrono::seconds(1));  // added delay for the drone to process commands
+        if (droneClient.sendCommand(commandsList[i]) != 0) {
+            std::cerr << "Command failed: " << commandsList[i] << ". Abording!";
+        }
     }
 
+    std::cout << "Landing.... \n" << std::endl;
     droneClient.sendCommand("land");
 }
 
@@ -194,7 +203,7 @@ void droneStatusCheck(UdpServer& serverSocket, std::atomic<bool>& keepRunning){
 }
 
 void droneVideoStream(UdpClient& droneClient, std::atomic<bool>& keepRunning){
-    droneClient.sendCommand("streamon");
+    // droneClient.sendCommand("streamon");
     // waiting for initialization above
     // std::this_thread::sleep_for(std::chrono::seconds(1));
 
@@ -204,5 +213,5 @@ void droneVideoStream(UdpClient& droneClient, std::atomic<bool>& keepRunning){
     videoReceiver.listeningToStream(keepRunning);
 
     // close
-    droneClient.sendCommand("streamoff");
+    // droneClient.sendCommand("streamoff");
 }

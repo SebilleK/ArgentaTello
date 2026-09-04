@@ -41,7 +41,7 @@ int UdpClient::initialSocket(){
     // connecting to the server/drone for the first time
     connect(currentSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
 
-    std::cout << "Attempting to connect to the Tello drone...\nTimeout: 5 secs" << std::endl;
+    std::cout << "Attempting to connect to the Tello drone...\nTimeout: 10 secs" << std::endl;
     
     const char* initialMessage = "command"; // initial command to enter SDK mode 
 
@@ -51,15 +51,19 @@ int UdpClient::initialSocket(){
 
     if (response > 0) {
         std::cout << "Received drone response. \nTello SDK mode initiated" << std::endl;
+        return currentSocket;
     } else {
         std::cout << "There was an error initiating SDK mode." << std::endl;
+        return -1;
     }
     
-
-    return currentSocket;
 }
         
 int UdpClient::sendCommand(const std::string& command){
+    if (currentSocket < 0) {
+        std::cerr << "Cannot send command: socket is not open." << std::endl;
+        return -1;
+    }
 
     send(currentSocket, command.data(), command.size(), 0); // .data() => raw pointer
      
@@ -67,18 +71,21 @@ int UdpClient::sendCommand(const std::string& command){
 
     if (response > 0) {
         std::cout << "Sent command successfully" << std::endl;
+        return 0;
     } else {
         std::cout << "There was a problem sending the command" << std::endl;
+        return -1;
     }
-
-    return currentSocket;
 }
 
 int UdpClient::receiveCommandResponse(){
+    if (currentSocket < 0) {
+        return -1;
+    }
 
     // timer to wait for response
     struct timeval responseTimeout;
-    responseTimeout.tv_sec = 5;
+    responseTimeout.tv_sec = 10;
     responseTimeout.tv_usec = 0;
 
     // setting timout
@@ -93,12 +100,12 @@ int UdpClient::receiveCommandResponse(){
     // TIMER 
     if (response <= 0) {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
-            std::cerr << "Timeout. Drone didn't respond within 5 secs. \n";
+            std::cerr << "Timeout. Drone didn't respond within 10 secs. \n";
         } else {
             std::cout << "Failed to send command \n Aborting." << std::endl;
             std::cerr << "Socket read error: " << strerror(errno) << " (code: " << errno << ")" << std::endl;
         }
-        closeCommsConnection();
+        // closeCommsConnection();
         return -1;
     }
 
@@ -106,9 +113,10 @@ int UdpClient::receiveCommandResponse(){
 
     if (response > 0) {
         std::cout << "Tello Drone:" << bufferResponse << std::endl;
-    }
+        return response;
+    } 
 
-    return response;
+    return -1;
 }
 
 void UdpClient::closeCommsConnection() { 
