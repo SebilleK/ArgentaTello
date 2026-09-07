@@ -1,7 +1,10 @@
 # WIP
 
+This is an exploratory project to interface with the programmable [DJI Tello drone](https://store.dji.com/pt/product/tello), making it execute pre-planned flight paths alongside real-time video processing. The main learning outcomes were working with a hardware API and basic socket communication, dealing with concurrency/threads, and implementing live visual feedback using OpenCV.
 
-## Makefile
+## Quickstart
+
+### Makefile
 
 Make sure you're in the root directory.
 
@@ -28,13 +31,45 @@ Creating executable
 ```bash
 g++ -std=c++17 -Wall -Wextra src/main.cpp src/comms/UdpClientSocket.cpp -Isrc -o argenta
 ```
-**use all files**
+**Use all files**
 
+## Setup Instructions 
+
+1. Download this repository, the YOLOv8 model (releases here: https://github.com/ultralytics/assets/releases) to the correct directory and build
+
+```bash
+curl -L -o yolov8n.onnx "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolov8n.onnx"
+make
+```
+**Make sure:**
+
+    1.1 You're using the **correct full filesystem path**
+
+    Ex: StreamReceiver.cpp
+    ```bash
+    net = cv::dnn::readNetFromONNX("/home/maggie/Desktop/ArgentaTello/src/stream/yolov8n.onnx")
+    ```
+
+    1.2 You have **changed the necessary IPs**
+
+    Ex: UdpClientSocket.cpp
+    ```bash 
+    serverAddress.sin_addr.s_addr = inet_addr("192.168.10.1"); // inet_addr("127.0.0.1"); // SEND COMMAND & RECEIVE RESPONSE FROM DRONE
+    ```
+
+    1.3 **Allow UDP traffic** on **ports 8889** and **11111** in your device
+
+2. Turn the drone on, wait a few seconds, and **ensure you're connected the correct Wifi Network** (Tello-XXXXXX)
+
+3. Run the program
+```bash 
+./argenta
+```
 
 ## Mock Server/Client
 
-Local mock server for testing command logic without the drone (PORT 8889). 
-Also sends fake status updates and writes them continously to a drone_status_log.txt file (PORT 8890).
+In the drone absence, there's also a local mock server for testing command logic without the drone (PORT 8889). 
+Also sends a fake status update message and writes it continously to a drone_status_log.txt file (PORT 8890).
 **Change client address to 127.0.0.1**.
 
 Creating executable and running
@@ -51,20 +86,3 @@ https://dl-cdn.ryzerobotics.com/downloads/Tello/Tello%20SDK%202.0%20User%20Guide
 **USER GUIDE:**
 https://dl-cdn.ryzerobotics.com/downloads/Tello/20180212/Tello+User+Manual+v1.0_EN_2.12.pdf
 
-## Connecting to the drone
-
-0. Download this repository
-1. Turn the drone on, wait a few seconds, and ensure you're connected the correct Wifi Network (Tello-XXXXXX)
-2. Change the necessary IPs (local => drone)
-
-Ex: UdpClientSocket.cpp
-```bash 
-serverAddress.sin_addr.s_addr = inet_addr("192.168.10.1"); // inet_addr("127.0.0.1"); // SEND COMMAND & RECEIVE RESPONSE FROM DRONE
-```
-3. Allow UDP traffic on ports 8889 and 11111 in your device
-
-4. Compile and run the program
-```bash 
-make
-./argenta
-```
