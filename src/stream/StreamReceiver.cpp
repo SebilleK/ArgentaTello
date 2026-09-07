@@ -29,22 +29,14 @@ static const std::vector<std::string> COCO_CLASSES = {
 
 // runs open cv video loop
 void UdpStream::listeningToStream(std::atomic<bool>& keepRunning){
-    // std::cout << "UDP Stream Server listening on port 11111...\n" << std::endl;
-    cv::VideoCapture cap("udp://@0.0.0.0:11111");
-
-    if (!cap.isOpened()) {
-        std::cerr << "Failed to open Tello Video Stream on port 11111" << std::endl;
-        return;
-    }
-
-    // cv::Mat frame;
+    setenv("OPENCV_FFMPEG_LOGLEVEL", "0", 1); // muting FFmpeg output
 
     // MODEL LOADING ___________________________________________________
 
     cv::dnn::Net net;
     // std::cout << std::filesystem::current_path();
     try {
-        net = cv::dnn::readNetFromONNX("models/yolov8n.onnx");
+        net = cv::dnn::readNetFromONNX("model/yolov8n.onnx");
 
     } catch (const cv::Exception& e) {
         std::cerr << "Failed to load ONNX model: " << e.what() << std::endl;
@@ -62,6 +54,18 @@ void UdpStream::listeningToStream(std::atomic<bool>& keepRunning){
     cv::Mat frame;
     
     // ______________________________________________________________________
+
+    // std::cout << "UDP Stream Server listening on port 11111...\n" << std::endl;
+    cv::VideoCapture cap("udp://@0.0.0.0:11111?overrun_nonfatal=1&fifo_size=50000", cv::CAP_FFMPEG);
+
+    if (!cap.isOpened()) {
+        std::cerr << "Failed to open Tello Video Stream on port 11111" << std::endl;
+        return;
+    }
+
+    // cv::Mat frame;
+
+
 
     while (keepRunning) {
         cap >> frame;

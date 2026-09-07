@@ -1,6 +1,17 @@
-# WIP
+# ArgentaTello (WIP)
 
 This is an exploratory project to interface with the programmable [DJI Tello drone](https://store.dji.com/pt/product/tello), making it execute pre-planned flight paths alongside real-time video processing. The main learning outcomes were working with a hardware API and basic socket communication, dealing with concurrency/threads, and implementing live visual feedback using OpenCV.
+
+## Prerequisites
+
+- Linux or macOs (POSIX)
+
+- C++17 compiler (g++) and build system (make)
+
+- OpenCV 4.x
+```bash
+pkg-config --modversion opencv4 # verify the installation 
+```
 
 ## Quickstart
 
@@ -19,47 +30,34 @@ make
 make clean
 ```
 
-### Manual
-
-Syntax check
-```bash
-g++ -fsyntax-only -std=c++17 -Wall -Wextra -Isrc [filename_path]
-```
-**ex: src/main.cpp or src/comms/UdpClientSocket.cpp**
-
-Creating executable
-```bash
-g++ -std=c++17 -Wall -Wextra src/main.cpp src/comms/UdpClientSocket.cpp -Isrc -o argenta
-```
-**Use all files**
-
 ## Setup Instructions 
 
 1. Download this repository, the YOLOv8 model (releases here: https://github.com/ultralytics/assets/releases) to the correct directory and build
 
 ```bash
-curl -L -o yolov8n.onnx "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolov8n.onnx"
+curl -L -o model/yolov8n.onnx "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolov8n.onnx"
 make
 ```
 **Make sure:**
 
-    1.1 You're using the **correct full filesystem path**
+- You're using the **correct filesystem path** (if you need to change it)
 
-    Ex: StreamReceiver.cpp
-    ```bash
-    net = cv::dnn::readNetFromONNX("/home/maggie/Desktop/ArgentaTello/src/stream/yolov8n.onnx")
-    ```
+Ex: StreamReceiver.cpp
 
-    1.2 You have **changed the necessary IPs**
+```cpp
+net = cv::dnn::readNetFromONNX("model/yolov8n.onnx") // or other
+```
 
-    Ex: UdpClientSocket.cpp
-    ```bash 
-    serverAddress.sin_addr.s_addr = inet_addr("192.168.10.1"); // inet_addr("127.0.0.1"); // SEND COMMAND & RECEIVE RESPONSE FROM DRONE
-    ```
+- The default drone IPs are used. If using the local mock server, change them.
+Ex: UdpClientSocket.cpp
 
-    1.3 **Allow UDP traffic** on **ports 8889** and **11111** in your device
+```cpp
+serverAddress.sin_addr.s_addr = inet_addr("192.168.10.1"); // inet_addr("127.0.0.1"); // SEND COMMAND & RECEIVE RESPONSE FROM DRONE
+```
 
-2. Turn the drone on, wait a few seconds, and **ensure you're connected the correct Wifi Network** (Tello-XXXXXX)
+1.3 **Allow UDP traffic** on **ports 8889** and **11111** in your device
+
+2. Turn the drone on, wait a few seconds, and **ensure you're connected to the correct Wifi Network** (Tello-XXXXXX)
 
 3. Run the program
 ```bash 
@@ -86,3 +84,6 @@ https://dl-cdn.ryzerobotics.com/downloads/Tello/Tello%20SDK%202.0%20User%20Guide
 **USER GUIDE:**
 https://dl-cdn.ryzerobotics.com/downloads/Tello/20180212/Tello+User+Manual+v1.0_EN_2.12.pdf
 
+## Important Limitations
+
+- UDP communication over Wi-Fi can be finnicky. Try to **fly indoors** in a **spacious, well-lit area** with **textured/colorful surroundings**. The drone is lightweight and will be particularly unstable if exposed to unfavorable conditions.

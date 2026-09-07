@@ -134,7 +134,7 @@ void definingRoute(std::vector<std::string>& commandsList) {
         if (currentCommand == "0" && !commandsList.empty()) {
             continueInput = false; 
 
-            size_t originalSize = commandsList.size();
+            int originalSize = commandsList.size();
             // size_t 
             for (int i = originalSize - 1; i >= 0; i--){
                 std::string returnCommand;
@@ -172,7 +172,7 @@ void startRoute(const std::vector<std::string>& commandsList, UdpClient& droneCl
     for (int i = 0; i < commandsList.size(); i++){
         
         if (droneClient.sendCommand(commandsList[i]) != 0) {
-            std::cerr << "Command failed: " << commandsList[i] << ". Abording!";
+            std::cerr << "Command failed: " << commandsList[i] << ". Aborting!";
         }
     }
 
