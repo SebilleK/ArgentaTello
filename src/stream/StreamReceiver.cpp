@@ -44,7 +44,7 @@ void UdpStream::listeningToStream(std::atomic<bool>& keepRunning){
     cv::dnn::Net net;
     // std::cout << std::filesystem::current_path();
     try {
-        net = cv::dnn::readNetFromONNX("/home/maggie/Desktop/ArgentaTello/src/stream/yolov8n.onnx");
+        net = cv::dnn::readNetFromONNX("models/yolov8n.onnx");
 
     } catch (const cv::Exception& e) {
         std::cerr << "Failed to load ONNX model: " << e.what() << std::endl;
