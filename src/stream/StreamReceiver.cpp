@@ -36,7 +36,8 @@ void UdpStream::listeningToStream(std::atomic<bool>& keepRunning){
     cv::dnn::Net net;
     // std::cout << std::filesystem::current_path();
     try {
-        net = cv::dnn::readNetFromONNX("model/yolov8n.onnx");
+        const char* modelPath = std::getenv("MODEL_PATH");
+        net = cv::dnn::readNetFromONNX(modelPath ? modelPath : "model/yolov8n.onnx");
 
     } catch (const cv::Exception& e) {
         std::cerr << "Failed to load ONNX model: " << e.what() << std::endl;
@@ -65,7 +66,9 @@ void UdpStream::listeningToStream(std::atomic<bool>& keepRunning){
 
     // cv::Mat frame;
 
-
+    // window resizing 
+    cv::namedWindow("Tello Video Stream", cv::WINDOW_GUI_NORMAL);
+    cv::resizeWindow("Tello Video Stream", 1920, 1080);
 
     while (keepRunning) {
         cap >> frame;

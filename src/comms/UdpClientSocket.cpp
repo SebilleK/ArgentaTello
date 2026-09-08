@@ -36,7 +36,8 @@ int UdpClient::initialSocket(){
     sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(8889); // port number
-    serverAddress.sin_addr.s_addr = inet_addr("192.168.10.1"); // inet_addr("127.0.0.1"); // SEND COMMAND & RECEIVE RESPONSE FROM DRONE
+    const char* ipEnv = std::getenv("DRONE_IP");
+    serverAddress.sin_addr.s_addr = inet_addr(ipEnv ? ipEnv : "192.168.10.1"); // inet_addr("127.0.0.1"); // SEND COMMAND & RECEIVE RESPONSE FROM DRONE
 
     // connecting to the server/drone for the first time
     connect(currentSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress));

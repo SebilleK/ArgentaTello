@@ -1,6 +1,8 @@
-# ArgentaTello (WIP)
+# ArgentaTello
 
 This is an exploratory project to interface with the programmable [DJI Tello drone](https://store.dji.com/pt/product/tello), making it execute pre-planned flight paths alongside real-time video processing. The main learning outcomes were working with a hardware API and basic socket communication, dealing with concurrency/threads, and implementing live visual feedback using OpenCV.
+
+![Working Example](./images/example.gif)   
 
 ## Prerequisites
 
@@ -13,7 +15,7 @@ This is an exploratory project to interface with the programmable [DJI Tello dro
 pkg-config --modversion opencv4 # verify the installation 
 ```
 
-## Quickstart
+## Build
 
 ### Makefile
 
@@ -30,7 +32,7 @@ make
 make clean
 ```
 
-## Setup Instructions 
+## Configuration
 
 1. Download this repository, the YOLOv8 model (releases here: https://github.com/ultralytics/assets/releases) to the correct directory and build
 
@@ -38,24 +40,8 @@ make clean
 curl -L -o model/yolov8n.onnx "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolov8n.onnx"
 make
 ```
-**Make sure:**
 
-- You're using the **correct filesystem path** (if you need to change it)
-
-Ex: StreamReceiver.cpp
-
-```cpp
-net = cv::dnn::readNetFromONNX("model/yolov8n.onnx") // or other
-```
-
-- The default drone IPs are used. If using the local mock server, change them.
-Ex: UdpClientSocket.cpp
-
-```cpp
-serverAddress.sin_addr.s_addr = inet_addr("192.168.10.1"); // inet_addr("127.0.0.1"); // SEND COMMAND & RECEIVE RESPONSE FROM DRONE
-```
-
-1.3 **Allow UDP traffic** on **ports 8889** and **11111** in your device
+- Make sure you've **allowed UDP traffic** on **ports 8889** and **11111** in your device
 
 2. Turn the drone on, wait a few seconds, and **ensure you're connected to the correct Wifi Network** (Tello-XXXXXX)
 
@@ -64,11 +50,23 @@ serverAddress.sin_addr.s_addr = inet_addr("192.168.10.1"); // inet_addr("127.0.0
 ./argenta
 ```
 
+If the drone successfully connects, you should be able to input a route and watch the drone execute it while streaming its camera with object detection, returning the way it came and landing.
+
+### Environment Variables
+
+- **The default drone IPs are used**. If using the local mock server, change the IP **when running the program**. This also applies to the model path: **if you're using a different directory** (relative to root), please **specify it**.
+
+**Example:**
+
+```bash
+DRONE_IP=127.0.0.1 MODEL_PATH=src/example/path/model.onnx ./argenta
+```
+
 ## Mock Server/Client
 
-In the drone absence, there's also a local mock server for testing command logic without the drone (PORT 8889). 
-Also sends a fake status update message and writes it continously to a drone_status_log.txt file (PORT 8890).
-**Change client address to 127.0.0.1**.
+In the drone's absence, there's also a local mock server for testing command logic without it (PORT 8889). 
+It also sends a fake status update message and writes it continously to a drone_status_log.txt file (PORT 8890).
+**Change client address to 127.0.0.1**. Please refer to [Environment Variables](#Environment-Variables).
 
 Creating executable and running
 ```bash
